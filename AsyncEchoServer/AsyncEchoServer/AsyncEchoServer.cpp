@@ -3,11 +3,19 @@
 
 #include "stdafx.h"
 
-
-
 #define WM_SOCKET (WM_USER + 1)
 
-static const int BufferSize = 4096;
+const int BufferSize = 4096;
+
+enum windProcErrorType
+{
+	WINPROC_SUCCESS,
+	WINPROC_SOCKET_ERROR,
+	WINPROC_ACCEPTING_ERROR,
+	WINDPROC_READING_ERROR,
+	WINDPROC_ERROR_MAX,
+
+};
 
 HWND createWokerWindow();
 void printError(char* funcName, int errorType);
@@ -73,6 +81,9 @@ int _tmain(int argc, _TCHAR* argv[])
 	closesocket(hServSock);
 	WSACleanup();
 
+	getchar();
+	getchar();
+
 	return 0;
 }
 
@@ -134,6 +145,7 @@ LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		if (WSAGETSELECTERROR(lParam))
 		{
 			printError("windowProc()", GetLastError());
+			return WINPROC_SOCKET_ERROR;
 		}
 		else
 		{
@@ -142,13 +154,15 @@ LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			case FD_ACCEPT:
 				if (0 != acceptingOccurented(wParam, hwnd))
 				{
-					return 1;
+					return WINPROC_ACCEPTING_ERROR;
 				}
 				break;
 				
 			case FD_READ:
-				readingOccurented(wParam, hwnd);
-			
+				if (0 != readingOccurented(wParam, hwnd))
+				{
+					return WINDPROC_READING_ERROR;
+				}
 				break;
 			case  FD_CLOSE:
 				closingOccurendted(wParam, hwnd);
@@ -197,6 +211,8 @@ int readingOccurented(SOCKET eventSocket, HWND hWindow)
 		printError("send()", WSAGetLastError());
 		return 1;
 	}
+
+	return 0;
 
 }
 
