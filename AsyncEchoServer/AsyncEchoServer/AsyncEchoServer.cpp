@@ -86,7 +86,7 @@ HWND createWokerWindow()
 	wndClass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
 	wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wndClass.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
-	wndClass.lpszClassName = (LPCWSTR)windowName;
+	wndClass.lpszClassName = WIN_NAME;
 	wndClass.lpszMenuName = NULL;
 
 	if (false == RegisterClass(&wndClass))
@@ -101,8 +101,8 @@ HWND createWokerWindow()
 
 	window = CreateWindowEx(
 		0,
-		WIN_NAME, 
-		"", 
+		WIN_NAME,
+		"Server", 
 		0,
 		CW_USEDEFAULT, CW_USEDEFAULT, 
 		CW_USEDEFAULT, CW_USEDEFAULT,
