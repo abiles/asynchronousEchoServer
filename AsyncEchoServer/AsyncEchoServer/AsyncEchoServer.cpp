@@ -14,6 +14,7 @@ void printError(char* funcName, int errorType);
 LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 int acceptingOccurented(SOCKET listenSocket, HWND hWindow);
 int readingOccurented(SOCKET eventSocket, HWND hWindow);
+void closingOccurendted(SOCKET eventSocket, HWND hWindow);
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -35,7 +36,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 
 
-	if (INVALID_SOCKET == (hServSock = socket(PF_INET, SOCK_STREAM, 0)));
+	if (INVALID_SOCKET == (hServSock = socket(PF_INET, SOCK_STREAM, 0)))
 	{
 		printError("socket()", WSAGetLastError());
 		return 0;
@@ -127,8 +128,7 @@ void printError(char* funcName, int errorType)
 
 LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	SOCKET listenSocket;
-	
+
 	if (uMsg == WM_SOCKET)
 	{
 		if (WSAGETSELECTERROR(lParam))
@@ -140,17 +140,19 @@ LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			switch (WSAGETSELECTEVENT(lParam))
 			{
 			case FD_ACCEPT:
-				if (0 != acceptingOccurented(listenSocket, hwnd))
+				if (0 != acceptingOccurented(wParam, hwnd))
 				{
-					break;
+					return 1;
 				}
 				break;
 				
 			case FD_READ:
-
+				readingOccurented(wParam, hwnd);
+			
 				break;
-
-				
+			case  FD_CLOSE:
+				closingOccurendted(wParam, hwnd);
+				break;
 			}
 		}
 	}
@@ -195,6 +197,21 @@ int readingOccurented(SOCKET eventSocket, HWND hWindow)
 		printError("send()", WSAGetLastError());
 		return 1;
 	}
+
+}
+
+void closingOccurendted(SOCKET eventSocket, HWND hWindow)
+{
+	SOCKADDR_IN socketAddr;
+	int sockAddrSize;
+
+	getpeername(eventSocket, (SOCKADDR*)&socketAddr, &sockAddrSize);
+
+	char* ip = inet_ntoa(socketAddr.sin_addr);
+	int port = ntohs(socketAddr.sin_port);
+
+	printf_s("Socket DisConnected = ip: %s, port : %d", ip, port);
+	closesocket(eventSocket);
 
 }
 
