@@ -124,6 +124,8 @@ SOCKET createListenSocket(HWND hWnd)
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	//에러 체크 해야되고
+	//FD_WRITE 관련 ㅐㄴ용도 해야되고 
 	if (uMsg == WM_SOCKET)
 	{
 		SOCKET sock = wParam;
@@ -135,6 +137,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 		case FD_READ:
 			onRead(sock, hwnd);
+			break;
+		case FD_CLOSE:
+			onClose(sock, hwnd);
 			break;
 		}
 	}
@@ -152,7 +157,7 @@ void onAccept(SOCKET sock, HWND hWnd)
 		return;
 
 	int errorId;
-	errorId = WSAAsyncSelect(clntSock, hWnd, WM_SOCKET, FD_READ | FD_READ | FD_CLOSE);
+	errorId = WSAAsyncSelect(clntSock, hWnd, WM_SOCKET, FD_READ | FD_WRITE | FD_CLOSE);
 	if (errorId != NO_ERROR)
 	{
 		closesocket(clntSock);
@@ -177,7 +182,8 @@ void onRead(SOCKET sock, HWND hWnd)
 		}
 	}
 
-	int sendSize = send(sock, buf, BUF_SIZE, 0);
+	//buf를 만들어서 받은 만큼빼고 나머지를 보내는 식으로 해야됨
+	int sendSize = send(sock, buf, recvSize, 0);
 	if (sendSize == SOCKET_ERROR)
 	{
 		errorId = WSAGetLastError();
